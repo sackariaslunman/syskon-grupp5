@@ -66,21 +66,21 @@ t = np.arange(0., 40., 0.1)
 def main():
     for i in range(N):
         accelerationskraften = a_last[i]*MLast
-        if(i < 150):
+        if(i < 150): # Först åker båten ut i 15 sekunder på trailern
             w_last_ref = 0.733
             F_last[i] =(tyngdkraften - friktionskraften + accelerationskraften)
-        elif(i >= 150 and i < 200):
+        elif(i >= 150 and i < 200): # Båten fortsätter åka ut fast i 5 sekunder fast nu i vatten
             w_last_ref = 0.733
             F_last[i] =(accelerationskraften/math.cos(12))
-        elif(i >= 200 and i < 250):
+        elif(i >= 200 and i < 250): # Båten vänder riktning i vattnet ock åket tillbaka i 5 sekunder
             w_last_ref = -0.733
             F_last[i] =(accelerationskraften/math.cos(12))
-        else:
+        else: #Båten dras upp på trailer i 15 sekunder
             w_last_ref = -0.733
             F_last[i] =(tyngdkraften + friktionskraften + accelerationskraften)
         T_l[i] =F_last[i] * vinschRadie
         T_dev[i] =(T_l[i]/(utväxling * förluster))
-        w_last[i] =(v_last[i] /(2*vinschRadie*math.pi))
+        w_last[i] =(v_last[i] /(vinschRadie))
         w_motor[i] =(w_last[i]*utväxling)
         P_motor[i] =(T_dev[i]*w_motor[i])
         I_motor[i] =(T_dev[i]/spänningskonstant)
