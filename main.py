@@ -4,11 +4,6 @@ from matplotlib import pyplot as plt
 
 
 #motorns variabler
-maxTDevMotor = 0.5 #[Nm]
-maxWmotor = 502.4 #[w] rad/s
-maxEffekt = 251.2 #[w] watt
-maxU = 10.67 #[U] spänning
-maxI = 28.8 # [i] ström
 resistans = 0.0459 # [R] resistans
 spänningskonstant = 0.0184
 utväxling = 3.5**5 # 1 : 525.2
@@ -17,24 +12,12 @@ förluster = 0.95**5
 #Ytterliggare variabler
 MLast = 1500
 g = 9.82 #gravitation
-#maxTLast = 189.88 # [Nm]
-w_last_ref = 0.733 # [w] rad/s
-distance = 6.6 # [m] meter
-maxTime = 180 #[s] sekunder
-vinschRadie = 0.05 # [m] meter
+vajer_dist = 8. # [m] meter
 
 #Uträknade siffror
-#TDev = maxTLast/(utväxling * förluster) #0.4672 Nm
-#wMotor = wVinsch * utväxling # [w] 385 rad/s
 tyngdkraften = MLast * g * math.sin(12*2*math.pi/360) #vertikaltlyft
 cr = 0.05 # Friktionskonstanten
 friktionskraften = cr * MLast * g * math.cos(12*2*math.pi/360) #normalkraften
-vLast = distance*maxTime
-
-
-#modell av lasten
-#FLast = tyngdkraften + friktionskraften + accelerationskraften
-#PLast = vLast*FLast
 
 #Inparametrar
 
@@ -47,49 +30,50 @@ a_last = np.zeros(N) #acceleration på vinsch - begynelsevärd
 s_last = np.zeros(N) #sträckan på last - begynelsevärde
 
 
-F_last = np.zeros(N)
-w_last = np.zeros(N)
-w_motor = np.zeros(N)
-T_l = np.zeros(N)
-T_dev = np.zeros(N)
-w_last = np.zeros(N)
-w_motor = np.zeros(N)
-P_motor = np.zeros(N)
-I_motor = np.zeros(N)
-U_motor = np.zeros(N)
-P_batt = np.zeros(N)
-I_batt = np.zeros(N)
-U_batt = 12 # [v] Volt - konstant
-W_batt = np.zeros(N)
+F_last = np.zeros(N) # [N] lastens kraft, Newton
+w_last = np.zeros(N) # [rad/s] lastens rotationshastighet
+w_motor = np.zeros(N) # [rad/s] motorns ratationshastighet
+T_l = np.zeros(N) # [Nm] lastens vridmoment, Newton meter
+T_dev = np.zeros(N) # [Nm] motorns vridmomentn Newton meter
+P_motor = np.zeros(N) # [W] motorns effekt, watt
+I_motor = np.zeros(N) # [A] motorns ström, ampere
+U_motor = np.zeros(N) # [V] motorns spänning, volt
+P_batt = np.zeros(N) # [W] batteriets effekt
+I_batt = np.zeros(N) # [A] batteriets ström, ampere
+U_batt = 12 # [V] batteriets spänning, volt - konstant
+W_batt = np.zeros(N) # [W] totala förbrukning i batteriets watt
 
 t = np.arange(0., 500., 0.1)
 def main():
-    w_last_ref = 0.733
+    v_last_ref = 0.0366
     for i in range(N):
-        accelerationskraften = a_last[i]*MLast
-        if(s_last[i] < 6 and w_last_ref > 0): # båten åker ner i vattnet
-            w_last_ref = 0.733
-            v_last_ref = w_last_ref * vinschRadie
+        vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i]*(1/3)))) 
+        # Vinschradie går från 5 cm (när vajern är indragen) till 3.75 cm (när vajern är fullt utdragen)
+
+        accelerationskraften = a_last[i]*MLast #accelerations kraften utanför för det är samma i alla lägen
+        
+        if(s_last[i] < 6 and v_last_ref > 0): # Båten är på trailern och åker ner mot vattnet
+            v_last_ref = 0.0366
             F_last[i] =(tyngdkraften - friktionskraften + accelerationskraften)
-        elif(s_last[i] >= 6 and s_last[i] <= 8 and w_last_ref >0): # Båten åker i vattnet i 2 meter
-            w_last_ref = 0.733
-            v_last_ref = w_last_ref * vinschRadie
+
+        elif(s_last[i] >= 6 and s_last[i] <= 8 and v_last_ref >0): # Båten åker ut i vattnet i 2 meter
+            v_last_ref = 0.0366
             F_last[i] =(accelerationskraften/math.cos(12))
-        elif((s_last[i] > 8 and w_last_ref > 0) or (s_last[i] > 6 and w_last_ref < 0)): # Båten vänder riktning i vattnet
-            w_last_ref = -0.733
-            v_last_ref = w_last_ref * vinschRadie
+
+        elif((s_last[i] > 8 and v_last_ref > 0) or (s_last[i] > 6 and v_last_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
+            v_last_ref = -0.0366
             F_last[i] =(accelerationskraften/math.cos(12))
-        else: #Båten dras upp på trailern
-            if s_last[i] < 0.1: # när det är 10 cm kvar så bromsar den in
-                w_last_ref = 0
-                v_last_ref = w_last_ref * vinschRadie
-            else:
-                w_last_ref = -0.733
-                v_last_ref = w_last_ref * vinschRadie
-                
+
+        else: #Båten är på trailern och dras upp
             F_last[i] =(tyngdkraften + friktionskraften + accelerationskraften)
+
+            if s_last[i] < 0.1: # om det är 10 cm kvar på så bromsar den in
+                v_last_ref = 0
+            else: # annars så drar den upp båten som vanligt
+                v_last_ref = -0.0366
+                
             
-        T_l[i] =F_last[i] * vinschRadie
+        T_l[i] =F_last[i] * vinschRadie 
         T_dev[i] =(T_l[i]/(utväxling * förluster))
         w_last[i] =(v_last[i] /(vinschRadie))
         w_motor[i] =(w_last[i]*utväxling)
@@ -98,35 +82,39 @@ def main():
         U_motor[i] =(w_motor[i]*spänningskonstant + resistans*I_motor[i])
         P_batt[i] =(I_motor[i]*U_motor[i])
         I_batt[i] =(P_batt[i]/U_batt)
-        if i < N-1: #Eulers funktion
-            a_last[i+1] =((1/2)*(v_last_ref - v_last[i]))
-            v_last[i+1] =(v_last[i] + dT*a_last[i])
-            s_last[i+1] =(s_last[i] + dT*v_last[i])
-            W_batt[i+1] =(W_batt[i] + dT*P_batt[i])
 
-    plot1 =  plt.figure(1)
+        if i < N-1: #Eulers funktion
+            a_last[i+1] =((1/2)*(v_last_ref - v_last[i])) # beräkna den nya accelerationen
+            v_last[i+1] =(v_last[i] + dT*a_last[i]) # beräkna den nya hastigheten
+            s_last[i+1] =(s_last[i] + dT*v_last[i]) # beräkna den nya sträckan
+            W_batt[i+1] =(W_batt[i] + dT*P_batt[i]) # beräkna den nya effekten
+
+    plot1 =  plt.figure(1) # plot av hastigheten beroende på tiden
     plt.plot(t, v_last)
     plt.xlabel('tid')
     plt.ylabel('hastighet [m/s]')
 
-    plot2 = plt.figure(2)
+    plot2 = plt.figure(2) # plot av sträckan beroende på tiden
     plt.plot(t, s_last)
     plt.xlabel('tid')
     plt.ylabel('distans [m]')
     
-    plot3 = plt.figure(3)
+    plot3 = plt.figure(3) # plot av accelerationen beroender på tiden
     plt.plot(t, a_last)
     plt.xlabel('tid')
     plt.ylabel('acceleration [m/s^2]')
 
     
-    plot4 = plt.figure(4)
+    plot4 = plt.figure(4) # plot av strömmen i motorn beroende på tiden
     plt.plot(t, I_motor)
     plt.xlabel('tid')
     plt.ylabel('ström [A]')
     
     plt.show()
+    
+
 
 
 if __name__ == "__main__":
     main()
+
