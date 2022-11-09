@@ -109,6 +109,11 @@ def main():
     plt.plot(t, I_motor)
     plt.xlabel('tid')
     plt.ylabel('ström [A]')
+
+    plt.figure(5) # plot av strömmen i motorn beroende på tiden
+    plt.plot(t, U_motor)
+    plt.xlabel('tid')
+    plt.ylabel('spänning [V]')
     
     plt.show()
     
