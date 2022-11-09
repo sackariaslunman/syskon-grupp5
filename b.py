@@ -65,7 +65,7 @@ W_batt = np.zeros(N)
 t = np.arange(0., 500., dT)
 
 F_last =(tyngdkraften - friktionskraften)
-
+J = 0.01
 def main():
     F_last =(tyngdkraften - friktionskraften) * 0.5
 
@@ -74,10 +74,16 @@ def main():
         T_l[i] =F_last * vinschRadie
         T_dev[i] = T_l[i]/(utväxling * förluster)
 
-        U_motor[i] = 0.5 * U_batt
-        I_motor[i] = T_dev[i]/spänningskonstant
-
-        w_motor[i] = (U_motor[i] - resistans * I_motor[i]) / spänningskonstant
+        U_motor[i] = U_batt
+        
+        # Försumma add dw == 0
+        #w_motor[i] = (U_motor[i] - resistans * I_motor[i]) / spänningskonstant
+        # I_motor[i] = T_dev[i]/spänningskonstant
+        
+        # dw != 0
+        w_motor[i] = (spänningskonstant * dT * U_motor[i] - dT * T_dev[i] * resistans + J * resistans * w_motor[i-1]) / (J * resistans + dT * spänningskonstant**2)
+        I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/spänningskonstant
+        
         w_last[i] = w_motor[i] / (utväxling * förluster)
         v_last[i] = w_last[i] * vinschRadie
         
