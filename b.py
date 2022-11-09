@@ -65,7 +65,10 @@ W_batt = np.zeros(N)
 t = np.arange(0., 500., dT)
 
 F_last =(tyngdkraften - friktionskraften)
+
+# Oklart vad J ska vara
 J = 0.01
+
 def main():
     F_last =(tyngdkraften - friktionskraften) * 0.5
 
