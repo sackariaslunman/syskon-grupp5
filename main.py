@@ -39,7 +39,7 @@ vLast = distance*maxTime
 #Inparametrar
 
 dT = 0.1 #[s], sekunder per tidssteg för simulering
-T = 100.0 # [s], sekunder för hela simuleringen
+T = 500.0 # [s], sekunder för hela simuleringen
 N = round (T/dT) #antal steg att simulera avrundat till heltal
 
 v_last = np.zeros(N) #hastighet på vinsch - begynelsevärde
@@ -62,29 +62,31 @@ I_batt = np.zeros(N)
 U_batt = 12 # [v] Volt - konstant
 W_batt = np.zeros(N)
 
-t = np.arange(0., 100., 0.1)
+t = np.arange(0., 500., 0.1)
 def main():
+    w_last_ref = 0.733
     for i in range(N):
         accelerationskraften = a_last[i]*MLast
-        if(i < 300): # Först åker båten ut i 30 sekunder på trailern
+        if(s_last[i] < 6 and w_last_ref > 0): # båten åker ner i vattnet
             w_last_ref = 0.733
             v_last_ref = w_last_ref * vinschRadie
             F_last[i] =(tyngdkraften - friktionskraften + accelerationskraften)
-        elif(i >= 300 and i < 400): # Båten fortsätter åka ut fast i 10 sekunder fast nu i vatten
+        elif(s_last[i] >= 6 and s_last[i] <= 8 and w_last_ref >0): # Båten åker i vattnet i 2 meter
             w_last_ref = 0.733
             v_last_ref = w_last_ref * vinschRadie
             F_last[i] =(accelerationskraften/math.cos(12))
-        elif(i >= 400 and i < 500): # Båten vänder riktning i vattnet ock åket tillbaka i 10 sekunder
+        elif((s_last[i] > 8 and w_last_ref > 0) or (s_last[i] > 6 and w_last_ref < 0)): # Båten vänder riktning i vattnet
             w_last_ref = -0.733
             v_last_ref = w_last_ref * vinschRadie
             F_last[i] =(accelerationskraften/math.cos(12))
-        else: #Båten dras upp på trailer i 50 sekunder
-            if s_last[i] < 0.1:
+        else: #Båten dras upp på trailern
+            if s_last[i] < 0.1: # när det är 10 cm kvar så bromsar den in
                 w_last_ref = 0
                 v_last_ref = w_last_ref * vinschRadie
             else:
                 w_last_ref = -0.733
                 v_last_ref = w_last_ref * vinschRadie
+                
             F_last[i] =(tyngdkraften + friktionskraften + accelerationskraften)
             
         T_l[i] =F_last[i] * vinschRadie
@@ -124,5 +126,7 @@ def main():
     plt.ylabel('ström [A]')
     
     plt.show()
+
+
 if __name__ == "__main__":
     main()
