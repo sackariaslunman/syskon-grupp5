@@ -39,7 +39,7 @@ vLast = distance*maxTime
 #Inparametrar
 
 dT = 0.1 #[s], sekunder per tidssteg för simulering
-T = 40.0 # [s], sekunder för hela simuleringen
+T = 100.0 # [s], sekunder för hela simuleringen
 N = round (T/dT) #antal steg att simulera avrundat till heltal
 
 v_last = np.zeros(N) #hastighet på vinsch - begynelsevärde
@@ -62,22 +62,31 @@ I_batt = np.zeros(N)
 U_batt = 12 # [v] Volt - konstant
 W_batt = np.zeros(N)
 
-t = np.arange(0., 40., 0.1)
+t = np.arange(0., 100., 0.1)
 def main():
     for i in range(N):
         accelerationskraften = a_last[i]*MLast
-        if(i < 150): # Först åker båten ut i 15 sekunder på trailern
+        if(i < 300): # Först åker båten ut i 30 sekunder på trailern
             w_last_ref = 0.733
+            v_last_ref = w_last_ref * vinschRadie
             F_last[i] =(tyngdkraften - friktionskraften + accelerationskraften)
-        elif(i >= 150 and i < 200): # Båten fortsätter åka ut fast i 5 sekunder fast nu i vatten
+        elif(i >= 300 and i < 400): # Båten fortsätter åka ut fast i 10 sekunder fast nu i vatten
             w_last_ref = 0.733
+            v_last_ref = w_last_ref * vinschRadie
             F_last[i] =(accelerationskraften/math.cos(12))
-        elif(i >= 200 and i < 250): # Båten vänder riktning i vattnet ock åket tillbaka i 5 sekunder
+        elif(i >= 400 and i < 500): # Båten vänder riktning i vattnet ock åket tillbaka i 10 sekunder
             w_last_ref = -0.733
+            v_last_ref = w_last_ref * vinschRadie
             F_last[i] =(accelerationskraften/math.cos(12))
-        else: #Båten dras upp på trailer i 15 sekunder
-            w_last_ref = -0.733
+        else: #Båten dras upp på trailer i 50 sekunder
+            if s_last[i] < 0.1:
+                w_last_ref = 0
+                v_last_ref = w_last_ref * vinschRadie
+            else:
+                w_last_ref = -0.733
+                v_last_ref = w_last_ref * vinschRadie
             F_last[i] =(tyngdkraften + friktionskraften + accelerationskraften)
+            
         T_l[i] =F_last[i] * vinschRadie
         T_dev[i] =(T_l[i]/(utväxling * förluster))
         w_last[i] =(v_last[i] /(vinschRadie))
@@ -87,8 +96,8 @@ def main():
         U_motor[i] =(w_motor[i]*spänningskonstant + resistans*I_motor[i])
         P_batt[i] =(I_motor[i]*U_motor[i])
         I_batt[i] =(P_batt[i]/U_batt)
-        if i < N-1:
-            a_last[i+1] =((1/4)*(w_last_ref - w_last[i]))
+        if i < N-1: #Eulers funktion
+            a_last[i+1] =((1/2)*(v_last_ref - v_last[i]))
             v_last[i+1] =(v_last[i] + dT*a_last[i])
             s_last[i+1] =(s_last[i] + dT*v_last[i])
             W_batt[i+1] =(W_batt[i] + dT*P_batt[i])
