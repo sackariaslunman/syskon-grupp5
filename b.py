@@ -74,13 +74,13 @@ from pid import PID
 
 def main():
     F_last =(tyngdkraften - friktionskraften) * 1
-    pid = PID(5, 0.5, 0.1, dT, 0.02, U_batt, -U_batt)
+    pid = PID(0.05, 0.005, 0.001, dT, 0.07, U_batt, -U_batt)
     for i in range(N):
         vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) 
 
         T_l[i] = F_last * vinschRadie
         T_dev[i] = T_l[i]/(utväxling * förluster)
-        U_motor[i] = pid.update(w_last[i-1] if i > 0 else 0)
+        U_motor[i] = pid.update(w_last[i-1])
         
         # Försumma att dw == 0
         # w_motor[i] = (U_motor[i] - resistans * I_motor[i]) / spänningskonstant

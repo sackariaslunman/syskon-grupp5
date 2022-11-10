@@ -11,6 +11,9 @@ class PID:
         self.min = min
 
     def update(self, input):
+        if not input:
+            input = 0
+            
         error = self.goal - input
         P = self.Kp * error
         I = self.u + self.Ki * self.h * error
