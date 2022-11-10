@@ -20,7 +20,8 @@ g = 9.82 #gravitation
 w_last_ref = 0.733 # [w] rad/s
 distance = 6.6 # [m] meter
 maxTime = 180 #[s] sekunder
-vinschRadie = 0.05 # [m] meter
+#vinschRadie = 0.05 # [m] meter
+vajer_dist = 8. # [m] meter
 
 #Uträknade siffror
 #TDev = maxTLast/(utväxling * förluster) #0.4672 Nm
@@ -73,7 +74,8 @@ def main():
     F_last =(tyngdkraften - friktionskraften) * 1
 
     for i in range(N):
-    
+        vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) 
+
         T_l[i] =F_last * vinschRadie
         T_dev[i] = T_l[i]/(utväxling * förluster)
 
