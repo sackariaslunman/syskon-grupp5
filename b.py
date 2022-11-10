@@ -74,7 +74,7 @@ from pid import PID
 
 def main():
     F_last =(tyngdkraften - friktionskraften) * 1
-    pid = PID(0.05, 0.005, 0.001, dT, 0.07, U_batt, -U_batt)
+    pid = PID(0.005, 0.0002, 0.001, dT, 0.073, U_batt, -U_batt)
     for i in range(N):
         vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) 
 
