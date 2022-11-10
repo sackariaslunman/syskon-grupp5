@@ -8,10 +8,10 @@ resistans = 0.0459 # [R] resistans
 spänningskonstant = 0.0184
 utväxling = 3.5**5 # 1 : 525.2
 förluster = 0.95**5
-max_u = 10.67*0.5 # [v] motorns max spänning, volt
+max_u = 10.67 # [v] motorns max spänning, volt
 
 #Ytterliggare variabler
-MLast = 1500*0.5
+MLast = 1500
 g = 9.82 #gravitation
 vajer_dist = 8. # [m] meter
 
@@ -46,6 +46,7 @@ U_batt = 12 # [V] batteriets spänning, volt - konstant
 W_batt = np.zeros(N) # [W] totala förbrukning i batteriets watt
 
 t = np.arange(0., 500., 0.1)
+
 def main():
     v_last_ref = 0.0366
     for i in range(N):
@@ -74,7 +75,7 @@ def main():
             else: # annars så drar den upp båten som vanligt
                 v_last_ref = -0.0366
                 
-            
+
         T_l[i] =F_last[i] * vinschRadie 
         T_dev[i] =(T_l[i]/(utväxling * förluster))
         w_last[i] =(v_last[i] /(vinschRadie))
@@ -84,12 +85,12 @@ def main():
         U_motor[i] =(w_motor[i]*spänningskonstant + resistans*I_motor[i])
         P_batt[i] =(I_motor[i]*U_motor[i])
         I_batt[i] =(P_batt[i]/U_batt)
-
         if i < N-1: #Eulers funktion
             a_last[i+1] =((1/2)*(v_last_ref - v_last[i])) # beräkna den nya accelerationen
             v_last[i+1] =(v_last[i] + dT*a_last[i]) # beräkna den nya hastigheten
             s_last[i+1] =(s_last[i] + dT*v_last[i]) # beräkna den nya sträckan
             W_batt[i+1] =(W_batt[i] + dT*P_batt[i]) # beräkna den nya effekten
+        
 
     plot1 =  plt.figure(1) # plot av hastigheten beroende på tiden
     plt.plot(t, v_last)
@@ -197,6 +198,6 @@ def regler_spänning():
 
 
 if __name__ == "__main__":
-    #main()
-    regler_spänning()
+    main()
+    #regler_spänning()
 
