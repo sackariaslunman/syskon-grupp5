@@ -193,10 +193,6 @@ def regler_spänning():
             
 
 
-
-
-
-
 if __name__ == "__main__":
     main()
     #regler_spänning()
