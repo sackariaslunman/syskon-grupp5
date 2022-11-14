@@ -98,6 +98,7 @@ def regler_spänning():
     u_last_ref = max_u
     #s_last[0] = 0
     spärr = False
+    tryck = 0 # tryck sensor
     for i in range(N):
         if spärr == True: #om spärren är påslagen så stoppar systemet.
             I_motor[i] = 0
@@ -148,11 +149,15 @@ def regler_spänning():
             I_motor[i] = T_dev[i]/spänningskonstant
 
             if i < N-1:
-                U_a_motor[i+1] = (1/4)*(u_last_ref-U_motor[i])
+                U_a_motor[i+1] = (1/2)*(u_last_ref-U_motor[i])
                 U_motor[i+1] =(U_motor[i] + dT*U_a_motor[i])
                 if(i>0):
                     a_last[i] = (v_last[i]-v_last[i-1])
                 s_last[i+1] = (s_last[i] + dT*v_last[i])
+            
+            if(tryck > 100): #Våran trycksensor ska stänga av systemet
+                print("tryck sensor")
+                spärr = True
 
 if __name__ == "__main__":
     #main()
