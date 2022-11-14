@@ -38,9 +38,9 @@ vLast = distance*maxTime
 
 #Inparametrar
 
-dT = 0.01 #[s], sekunder per tidssteg för simulering
+dt = 0.01 #[s], sekunder per tidssteg för simulering
 T = 500.0 # [s], sekunder för hela simuleringen
-N = round (T/dT) #antal steg att simulera avrundat till heltal
+N = round (T/dt) #antal steg att simulera avrundat till heltal
 
 v_last = np.zeros(N) #hastighet på vinsch - begynelsevärde
 a_last = np.zeros(N) #acceleration på vinsch - begynelsevärd
@@ -62,8 +62,9 @@ P_batt = np.zeros(N)
 I_batt = np.zeros(N)
 U_batt = 12 # [v] Volt - konstant
 W_batt = np.zeros(N)
+r_ref = 0.073   #referenssignal till systemet. Denna ska ändras beroende på vilket steg vi är i simuleringen. Baklänges / framlänges / stopp etc. 
 
-t = np.arange(0., 500., dT)
+t = np.arange(0., 500., dt)
 
 F_last =(tyngdkraften - friktionskraften)
 
@@ -73,34 +74,38 @@ J = 0.1
 from pid import PID
 
 def main():
-    F_last =(tyngdkraften - friktionskraften) * 1
-    pid = PID(0.005, 0.0002, 0.001, dT, 0.073, U_batt, -U_batt)
+    F_last =(tyngdkraften - friktionskraften) * 1       # faktorn representerar 100 %. 
+    pid = PID(0.005, 0.0002, 0.001, dt, U_batt, -U_batt)        # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+                                                                # spänning är det batteriet kan förse som högst. 
     for i in range(N):
-        vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) 
+        vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
 
-        T_l[i] = F_last * vinschRadie
-        T_dev[i] = T_l[i]/(utväxling * förluster)
-        U_motor[i] = pid.update(w_last[i-1])
+        T_l[i] = F_last * vinschRadie                           # Vridmoment från lasten
+        T_dev[i] = T_l[i]/(utväxling * förluster)               # Vad motorn kommer behöva utveckla
+        U_motor[i] = pid.update(w_last[i-1], r_ref)             # Här är det klart fel, vår regulator skall regularisera spänning inte rotationshastighet.
         
         # Försumma att dw == 0
         # w_motor[i] = (U_motor[i] - resistans * I_motor[i]) / spänningskonstant
         # I_motor[i] = T_dev[i]/spänningskonstant
         
         # dw != 0
-        w_motor[i] = (spänningskonstant * dT * U_motor[i] - dT * T_dev[i] * resistans + J * resistans * w_motor[i-1]) / (J * resistans + dT * spänningskonstant**2)
+        # formeln för motorns varvtal:
+        w_motor[i] = (spänningskonstant * dt * U_motor[i] - dt * T_dev[i] * resistans + J * resistans * w_motor[i-1]) / (J * resistans + dt * spänningskonstant**2)
+        # Tar ut strömmen: 
         I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/spänningskonstant
         
-        w_last[i] = w_motor[i] / (utväxling * förluster)
+        w_last[i] = w_motor[i] / (utväxling)
         v_last[i] = w_last[i] * vinschRadie
         
         P_batt[i] = I_motor[i]*U_motor[i]
+
         P_motor[i] = T_dev[i]*w_motor[i]
         I_batt[i] = P_batt[i]/U_batt
 
         if i > 0: #Eulers metod
-            a_last[i] = (v_last[i] - v_last[i-1]) / dT
-            s_last[i] = s_last[i-1] + dT*v_last[i]
-            W_batt[i] = W_batt[i-1] + dT*P_batt[i]
+            a_last[i] = (v_last[i] - v_last[i-1]) / dt
+            s_last[i] = s_last[i-1] + dt*v_last[i]
+            W_batt[i] = W_batt[i-1] + dt*P_batt[i]
 
     plt.figure(1)
     plt.plot(t, v_last)
