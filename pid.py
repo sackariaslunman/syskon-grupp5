@@ -1,5 +1,5 @@
 class PID:
-    def __init__(self, Kp = 0., Ki = 0., Kd = 0., dt = 0.001, max = None, min = None):
+    def __init__(self, Kp = 0., Ki = 0., Kd = 0., dt = 0.001, max_u = None, min_u = None):
         # Skapar PID-regulatorn med de olika konstanterna, dt vilket är samplingsintervallet (/h), samt min och max spänning. 
         self.Kp = Kp
         self.Ki = Ki
@@ -8,8 +8,8 @@ class PID:
         self.dt = dt
         self.u = 0
         self.u0 = 0        
-        self.max = max
-        self.min = min
+        self.max = max_u
+        self.min = min_u
         self.prev__error = 0
 
     def update(self, input, r_ref):

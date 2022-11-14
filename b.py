@@ -45,7 +45,7 @@ N = round (T/dt) #antal steg att simulera avrundat till heltal
 v_last = np.zeros(N) #hastighet på vinsch - begynelsevärde
 a_last = np.zeros(N) #acceleration på vinsch - begynelsevärd
 s_last = np.zeros(N) #sträckan på last - begynelsevärde
-
+spärr = bool # det som bestämmer om systemet skall stanna eller ej. Bestäms genom trycksensor. 
 
 F_last = np.zeros(N)
 w_last = np.zeros(N)
@@ -63,10 +63,10 @@ I_batt = np.zeros(N)
 U_batt = 12 # [v] Volt - konstant
 W_batt = np.zeros(N)
 r_ref = 0.073   #referenssignal till systemet. Denna ska ändras beroende på vilket steg vi är i simuleringen. Baklänges / framlänges / stopp etc. 
+v_ref = 0.0366
 
 t = np.arange(0., 500., dt)
 
-F_last =(tyngdkraften - friktionskraften)
 
 # Oklart vad J ska vara
 J = 0.1
@@ -74,15 +74,61 @@ J = 0.1
 from pid import PID
 
 def main():
-    F_last =(tyngdkraften - friktionskraften) * 1       # faktorn representerar 100 %. 
-    pid = PID(0.005, 0.0002, 0.001, dt, U_batt, -U_batt)        # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+    spärr = False
+    #F_last =(tyngdkraften - friktionskraften) * 1       # faktorn representerar 100 %. 
+    pid = PID(0.8, 0.95, 0.9, dt, maxU, -maxU)        # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
                                                                 # spänning är det batteriet kan förse som högst. 
+    tryck = 0
+    v_ref = 0.0366
     for i in range(N):
+        accelerationskraften = a_last[i]*MLast #accelerations kraften utanför för det är samma i alla lägen
         vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
+        if(s_last[i] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
+            v_ref = 0.0366
+            F_last[i] =(tyngdkraften - friktionskraften + accelerationskraften)
 
-        T_l[i] = F_last * vinschRadie                           # Vridmoment från lasten
-        T_dev[i] = T_l[i]/(utväxling * förluster)               # Vad motorn kommer behöva utveckla
-        U_motor[i] = pid.update(w_last[i-1], r_ref)             # Här är det klart fel, vår regulator skall regularisera spänning inte rotationshastighet.
+        elif(s_last[i] >= 6 and s_last[i] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
+            v_ref= 0.0366
+            F_last[i] =(accelerationskraften/math.cos(12))
+
+        elif((s_last[i] > 8 and v_ref > 0) or (s_last[i] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
+            v_ref = -0.0366
+            F_last[i] =(accelerationskraften/math.cos(12))
+
+        else: #Båten är på trailern och dras upp
+            F_last[i] =(tyngdkraften + friktionskraften + accelerationskraften)
+
+            if tryck > 100: # [Pa] om det är 10 cm kvar på så bromsar den in
+                v_ref = 0
+                I_motor[i] = 0
+
+            else: # annars så drar den upp båten som vanligt
+                v_ref = -0.0366
+            
+
+        if spärr == True: # om spärren är på
+            v_ref = 0
+            I_motor[i] = 0
+
+        U_motor[i] = pid.update(v_last[i-1], v_ref) # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
+
+        T_l[i] = F_last[i]*vinschRadie
+        T_dev[i] = (T_l[i]/(utväxling * förluster))
+        if spärr == False:
+            I_motor[i] = T_dev[i]/spänningskonstant
+        if T_dev[i]/spänningskonstant > maxI: 
+            # Om systemet vill få mer ström än vad elmotorn klarar av så stängs systemet av
+            spärr = True
+        
+
+        w_motor[i] = (U_motor[i] - resistans*I_motor[i])/spänningskonstant
+        w_last[i] = w_motor[i]/utväxling
+        v_last[i] = w_last[i]*vinschRadie
+
+
+        #T_l[i] = F_last * vinschRadie                           # Vridmoment från lasten
+        #T_dev[i] = T_l[i]/(utväxling * förluster)               # Vad motorn kommer behöva utveckla
+        #U_motor[i] = pid.update(v_last[i-1], v_ref)             # Här är det klart fel, vår regulator skall regularisera spänning inte rotationshastighet.
         
         # Försumma att dw == 0
         # w_motor[i] = (U_motor[i] - resistans * I_motor[i]) / spänningskonstant
@@ -90,12 +136,16 @@ def main():
         
         # dw != 0
         # formeln för motorns varvtal:
-        w_motor[i] = (spänningskonstant * dt * U_motor[i] - dt * T_dev[i] * resistans + J * resistans * w_motor[i-1]) / (J * resistans + dt * spänningskonstant**2)
-        # Tar ut strömmen: 
-        I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/spänningskonstant
+        # w_motor[i] = (spänningskonstant * dt * U_motor[i] - dt * T_dev[i] * resistans + J * resistans * w_motor[i-1]) / (J * resistans + dt * spänningskonstant**2)
+        # # Tar ut strömmen: 
+        # if spärr == False: # om spärren inte är på
+        #     I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/spänningskonstant
+
+        # if (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/spänningskonstant > maxI: # Kolla om man ska slå på spärr
+        #     spärr = True
         
-        w_last[i] = w_motor[i] / (utväxling)
-        v_last[i] = w_last[i] * vinschRadie
+        # w_last[i] = w_motor[i] / (utväxling)
+        # v_last[i] = w_last[i] * vinschRadie
         
         P_batt[i] = I_motor[i]*U_motor[i]
 
@@ -106,6 +156,10 @@ def main():
             a_last[i] = (v_last[i] - v_last[i-1]) / dt
             s_last[i] = s_last[i-1] + dt*v_last[i]
             W_batt[i] = W_batt[i-1] + dt*P_batt[i]
+
+        # if(tryck > 100): #Våran trycksensor ska stänga av systemet
+        #         print("tryck sensor")
+        #         spärr = True
 
     plt.figure(1)
     plt.plot(t, v_last)

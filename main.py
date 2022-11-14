@@ -138,9 +138,6 @@ def regler_spänning():
                 else: # annars så drar den upp båten som vanligt
                     u_last_ref = -max_u
 
-            w_motor[i] = (U_motor[i] - resistans*I_motor[i])/spänningskonstant
-            w_last[i] = w_motor[i]/utväxling
-            v_last[i] = w_last[i]*vinschRadie
             T_l[i] = F_last[i]*vinschRadie
             T_dev[i] = (T_l[i]/(utväxling * förluster))
             if T_dev[i]/spänningskonstant > max_i: 
@@ -148,6 +145,11 @@ def regler_spänning():
                 spärr = True
             I_motor[i] = T_dev[i]/spänningskonstant
 
+            w_motor[i] = (U_motor[i] - resistans*I_motor[i])/spänningskonstant
+            print(I_motor[i])
+            w_last[i] = w_motor[i]/utväxling
+            v_last[i] = w_last[i]*vinschRadie
+            
             if i < N-1:
                 U_a_motor[i+1] = (1/2)*(u_last_ref-U_motor[i])
                 U_motor[i+1] =(U_motor[i] + dT*U_a_motor[i])
