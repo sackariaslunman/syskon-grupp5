@@ -146,7 +146,6 @@ def regler_spänning():
             I_motor[i] = T_dev[i]/spänningskonstant
 
             w_motor[i] = (U_motor[i] - resistans*I_motor[i])/spänningskonstant
-            print(I_motor[i])
             w_last[i] = w_motor[i]/utväxling
             v_last[i] = w_last[i]*vinschRadie
             

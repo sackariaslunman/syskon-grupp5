@@ -76,44 +76,45 @@ from pid import PID
 def main():
     spärr = False
     #F_last =(tyngdkraften - friktionskraften) * 1       # faktorn representerar 100 %. 
-    pid = PID(0.8, 0.95, 0.9, dt, maxU, -maxU)        # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+    pid = PID(0.9, 5, 0.0001 , dt, (maxWmotor/utväxling), -(maxWmotor/utväxling))        # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
                                                                 # spänning är det batteriet kan förse som högst. 
     tryck = 0
     v_ref = 0.0366
     for i in range(N):
         accelerationskraften = a_last[i]*MLast #accelerations kraften utanför för det är samma i alla lägen
         vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
-        if(s_last[i] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
-            v_ref = 0.0366
+        if(s_last[i-1] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
+            v_ref = 2*0.0366
             F_last[i] =(tyngdkraften - friktionskraften + accelerationskraften)
 
-        elif(s_last[i] >= 6 and s_last[i] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
-            v_ref= 0.0366
+        elif(s_last[i-1] >= 6 and s_last[i-1] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
+            v_ref= 2*0.0366
             F_last[i] =(accelerationskraften/math.cos(12))
 
-        elif((s_last[i] > 8 and v_ref > 0) or (s_last[i] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
-            v_ref = -0.0366
+        elif((s_last[i-1] > 8 and v_ref > 0) or (s_last[i-1] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
+            
+            v_ref = -2*0.0366
             F_last[i] =(accelerationskraften/math.cos(12))
 
         else: #Båten är på trailern och dras upp
             F_last[i] =(tyngdkraften + friktionskraften + accelerationskraften)
 
-            if tryck > 100: # [Pa] om det är 10 cm kvar på så bromsar den in
+            if tryck > 100 or s_last[i-1] < 0.1: # [Pa] om det är 10 cm kvar på så bromsar den in
                 v_ref = 0
                 I_motor[i] = 0
 
             else: # annars så drar den upp båten som vanligt
-                v_ref = -0.0366
+                v_ref = -2*0.0366
             
 
         if spärr == True: # om spärren är på
             v_ref = 0
             I_motor[i] = 0
 
-        U_motor[i] = pid.update(v_last[i-1], v_ref) # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
 
         T_l[i] = F_last[i]*vinschRadie
         T_dev[i] = (T_l[i]/(utväxling * förluster))
+
         if spärr == False:
             I_motor[i] = T_dev[i]/spänningskonstant
         if T_dev[i]/spänningskonstant > maxI: 
@@ -125,32 +126,17 @@ def main():
         w_last[i] = w_motor[i]/utväxling
         v_last[i] = w_last[i]*vinschRadie
 
-
-        #T_l[i] = F_last * vinschRadie                           # Vridmoment från lasten
-        #T_dev[i] = T_l[i]/(utväxling * förluster)               # Vad motorn kommer behöva utveckla
-        #U_motor[i] = pid.update(v_last[i-1], v_ref)             # Här är det klart fel, vår regulator skall regularisera spänning inte rotationshastighet.
-        
-        # Försumma att dw == 0
-        # w_motor[i] = (U_motor[i] - resistans * I_motor[i]) / spänningskonstant
-        # I_motor[i] = T_dev[i]/spänningskonstant
-        
-        # dw != 0
-        # formeln för motorns varvtal:
-        # w_motor[i] = (spänningskonstant * dt * U_motor[i] - dt * T_dev[i] * resistans + J * resistans * w_motor[i-1]) / (J * resistans + dt * spänningskonstant**2)
-        # # Tar ut strömmen: 
-        # if spärr == False: # om spärren inte är på
-        #     I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/spänningskonstant
-
-        # if (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/spänningskonstant > maxI: # Kolla om man ska slå på spärr
-        #     spärr = True
-        
-        # w_last[i] = w_motor[i] / (utväxling)
-        # v_last[i] = w_last[i] * vinschRadie
         
         P_batt[i] = I_motor[i]*U_motor[i]
 
         P_motor[i] = T_dev[i]*w_motor[i]
         I_batt[i] = P_batt[i]/U_batt
+        if i < N-1:
+            U_motor[i+1] = ((pid.update(v_last[i-1], v_ref)/vinschRadie)*utväxling)*spänningskonstant + resistans*I_motor[i] # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
+            if U_motor[i+1] > maxU:
+                U_motor[i+1] = maxU
+            elif U_motor[i+1] < -maxU:
+                U_motor[i+1] = -maxU
 
         if i > 0: #Eulers metod
             a_last[i] = (v_last[i] - v_last[i-1]) / dt
