@@ -76,24 +76,25 @@ from pid import PID
 def main():
     spärr = False
     #F_last =(tyngdkraften - friktionskraften) * 1       # faktorn representerar 100 %. 
-    pid = PID(0.9, 5, 0.0001 , dt, (maxWmotor/utväxling), -(maxWmotor/utväxling))        # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
-                                                                # spänning är det batteriet kan förse som högst. 
+    pid = PID(0.1, 1, 0, dt, (maxWmotor/utväxling), -(maxWmotor/utväxling))        # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+                                                                # Elmotorns max rotations 
     tryck = 0
     v_ref = 0.0366
     for i in range(N):
         accelerationskraften = a_last[i]*MLast #accelerations kraften utanför för det är samma i alla lägen
         vinschRadie = 0.05*(vajer_dist/(vajer_dist + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
+        
         if(s_last[i-1] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
-            v_ref = 2*0.0366
+            v_ref = 0.0366
             F_last[i] =(tyngdkraften - friktionskraften + accelerationskraften)
 
         elif(s_last[i-1] >= 6 and s_last[i-1] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
-            v_ref= 2*0.0366
+            v_ref= 0.0366
             F_last[i] =(accelerationskraften/math.cos(12))
 
         elif((s_last[i-1] > 8 and v_ref > 0) or (s_last[i-1] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
             
-            v_ref = -2*0.0366
+            v_ref = -0.0366
             F_last[i] =(accelerationskraften/math.cos(12))
 
         else: #Båten är på trailern och dras upp
@@ -104,7 +105,7 @@ def main():
                 I_motor[i] = 0
 
             else: # annars så drar den upp båten som vanligt
-                v_ref = -2*0.0366
+                v_ref = -0.0366
             
 
         if spärr == True: # om spärren är på
@@ -123,14 +124,17 @@ def main():
         
 
         w_motor[i] = (U_motor[i] - resistans*I_motor[i])/spänningskonstant
+        # Här tar vi ut spänningen och strömmen från systemet med sensorer
+        # och sen använder vi dessa värden för att göra en virituell sensor för att hålla koll på hastigheten.
+        
         w_last[i] = w_motor[i]/utväxling
         v_last[i] = w_last[i]*vinschRadie
 
         
         P_batt[i] = I_motor[i]*U_motor[i]
-
         P_motor[i] = T_dev[i]*w_motor[i]
         I_batt[i] = P_batt[i]/U_batt
+        
         if i < N-1:
             U_motor[i+1] = ((pid.update(v_last[i-1], v_ref)/vinschRadie)*utväxling)*spänningskonstant + resistans*I_motor[i] # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
             if U_motor[i+1] > maxU:
@@ -143,9 +147,6 @@ def main():
             s_last[i] = s_last[i-1] + dt*v_last[i]
             W_batt[i] = W_batt[i-1] + dt*P_batt[i]
 
-        # if(tryck > 100): #Våran trycksensor ska stänga av systemet
-        #         print("tryck sensor")
-        #         spärr = True
 
     plt.figure(1)
     plt.plot(t, v_last)

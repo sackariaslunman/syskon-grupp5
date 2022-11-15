@@ -13,11 +13,13 @@ class PID:
         self.prev__error = 0
         self.prev_ref = 0
         self.new_ref = 0
+        self.I_prev = 0
     def update(self, input, r_ref):
         # Själva användandet av regulatorn. 
         
         if self.prev_ref != r_ref:
             self.new_ref = 0
+        
         if self.new_ref < 0.99:
             self.new_ref += 0.001
         else:
@@ -27,7 +29,8 @@ class PID:
         error = self.new_ref*r_ref - input
         
         P = self.Kp * error                                 # Kp*e  
-        I = self.Ki * self.dt * error                       # Ki * \integral (e dt)
+        I = self.Ki *(self.I_prev + self.dt * error)
+        self.I_prev = I                      # Ki * \integral (e dt)
         D = self.Kd * (error - self.prev__error) / self.dt  # Kd * de/dt
         # self.u0 = self.u
         self.u = P + I + D                                  # Kp*e + Ki* \integral (e dt) + Kd * de/dt (precis som från föreläsningarna)
