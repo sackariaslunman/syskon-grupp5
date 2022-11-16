@@ -45,11 +45,12 @@ def main():
                 gl.v_ref = -0.0366
             
 
-        if spärr == True: # om spärren är på
+        if spärr == True: # om spärren är på -> stanna
             gl.v_ref = 0
             gl.I_motor[i] = 0
 
-
+        # Kollar vridmomentet för att senare kunna ta ut strömmen
+        # Men i vårt verkliga system kommer sensorn att göra det
         gl.T_l[i] = gl.F_last[i]*r_vinsch 
         gl.T_dev[i] = (gl.T_l[i]/(gl.k * gl.f))
 
@@ -64,13 +65,14 @@ def main():
         # Här tar vi ut spänningen och strömmen från systemet med sensorer
         # och sen använder vi dessa värden för att göra en virituell sensor för att hålla koll på hastigheten.
         
+        # Virtuella sensorn mäter hastighet på vajer
         gl.w_last[i] = gl.w_motor[i]/gl.k
         gl.v_last[i] = gl.w_last[i]*r_vinsch
 
         
-        
+        # Här beräknas spänningen för nästa tidssteg med vår regulator
         if i < gl.N-1:
-            gl.U_motor[i+1] = ((pid.update(gl.v_last[i-1], gl.v_ref)/r_vinsch)*gl.k)*gl.Ke + gl.R*gl.I_motor[i] # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
+            gl.U_motor[i+1] = ((pid.update(gl.v_last[i-1], gl.v_ref)/r_vinsch)*gl.k)*gl.Ke + gl.R*gl.I_motor[i] 
             if gl.U_motor[i+1] > gl.maxU:
                 gl.U_motor[i+1] = gl.maxU
             elif gl.U_motor[i+1] < -gl.maxU:
@@ -79,8 +81,10 @@ def main():
         if i > 0: #Eulers metod
             gl.a_last[i] = (gl.v_last[i] - gl.v_last[i-1]) / gl.dt
             gl.s_last[i] = gl.s_last[i-1] + gl.dt*gl.v_last[i]
-            gl.W_batt[i] = gl.W_batt[i-1] + gl.dt*gl.P_batt[i]
-
+    
+    """
+    Plotta grafer - hastighet, distans, acceleration, ström, spänning 
+    """
 
     plt.figure(1)
     plt.plot(t, gl.v_last)
