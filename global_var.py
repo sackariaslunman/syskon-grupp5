@@ -22,7 +22,7 @@ f = 0.95**5         # Förluster i växellådan. 5 % per steg.
 """
 Trailer och last (gravitation med): 
 """
-m_last = 1500
+m_last = 1500 #* 0.5
 g = 9.82            # [m/s^2] gravitationskonstanten.
 w_last_ref = 0.733  # [w] rad/s
 s_total = 6.6       # [m] Meter vilket är den totala sträckan båten kommer färdas i. 

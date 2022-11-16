@@ -12,10 +12,9 @@ t = np.arange(0., T, dt)
 from pid import PID
 def main():
     for i in range(N):
-        F_a = a_last[i]*m_last*0.5 #accelerations kraften utanför för det är samma i alla lägen
+        F_a = a_last[i]*m_last #accelerations kraften utanför för det är samma i alla lägen
         r_vinsch = 0.05*(l_vajer/(l_vajer + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
         F_last[i] =(F + F_f + F_a)
-        
 
         # Kollar vridmomentet för att senare kunna ta ut strömmen
         # Men i vårt verkliga system kommer sensorn att göra det
@@ -74,6 +73,10 @@ def main():
     plt.xlabel('tid')
     plt.ylabel('spänning [V]')
     
+    
+    print("Max hastighet:", np.amax(v_last))
+    print("Max acceleration:", np.amax(a_last))
+    print("Max ström:", np.amax(I_motor))
     plt.show()
 
 
