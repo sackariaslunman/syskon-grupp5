@@ -1,9 +1,8 @@
 import math
 import numpy as np
-from matplotlib import pyplot as plt
 
 """
-Motorns värden: 
+Motorns värden:
 """
 maxT_dev = 0.5      # [Nm]  Högsta utvecklade vridmoment. 
 maxwmotor = 502.4   # [rad/s] Högsta vinkelhastigheten hos motorn. 

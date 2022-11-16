@@ -1,114 +1,114 @@
 import numpy as np
 import math
 from matplotlib import pyplot as plt
-import global_var as gl
+from global_var import *
 
 """
 Simulering och tidssteg osv: 
 # """
 
-t = np.arange(0., gl.T, gl.dt)
+t = np.arange(0., T, dt)
 
 from pid import PID
 
 def main():
     spärr = False
     # PI-kontroller (deriveringen är känslig för noise)
-    pid = PID(gl.Kp, gl.Ki, 0, gl.dt, (gl.maxwmotor/gl.k), -(gl.maxwmotor/gl.k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+    pid = PID(Kp, Ki, 0, dt, (maxwmotor/k), -(maxwmotor/k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
                                                                               # Elmotorns max rotations 
     tryck = 0
-    gl.v_ref = 0.0366
-    for i in range(gl.N):
-        F_a = gl.a_last[i]*gl.m_last #accelerations kraften utanför för det är samma i alla lägen
-        r_vinsch = 0.05*(gl.l_vajer/(gl.l_vajer + (gl.s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
+    v_ref = 0.0366
+    for i in range(N):
+        F_a = a_last[i]*m_last #accelerations kraften utanför för det är samma i alla lägen
+        r_vinsch = 0.05*(l_vajer/(l_vajer + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
         
-        if(gl.s_last[i-1] < 6 and gl.v_ref > 0): # Båten är på trailern och åker ner mot vattnet
-            gl.v_ref = 0.0366
-            gl.F_last[i] =(gl.F - gl.F_f + F_a)
+        if(s_last[i-1] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
+            v_ref = 0.0366
+            F_last[i] =(F - F_f + F_a)
 
-        elif(gl.s_last[i-1] >= 6 and gl.s_last[i-1] <= 8 and gl.v_ref >0): # Båten åker ut i vattnet i 2 meter
-            gl.v_ref= 0.0366
-            gl.F_last[i] =(F_a/math.cos(12))
+        elif(s_last[i-1] >= 6 and s_last[i-1] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
+            v_ref= 0.0366
+            F_last[i] =(F_a/math.cos(12))
 
-        elif((gl.s_last[i-1] > 8 and gl.v_ref > 0) or (gl.s_last[i-1] > 6 and gl.v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
+        elif((s_last[i-1] > 8 and v_ref > 0) or (s_last[i-1] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
             
-            gl.v_ref = -0.0366
-            gl.F_last[i] =(F_a/math.cos(12))
+            v_ref = -0.0366
+            F_last[i] =(F_a/math.cos(12))
 
         else: #Båten är på trailern och dras upp
-            gl.F_last[i] =(gl.F + gl.F_f + F_a)
+            F_last[i] =(F + F_f + F_a)
 
-            if tryck > 100 or gl.s_last[i-1] < 0.1: # [Pa] om det är 10 cm kvar på så bromsar den in
-                gl.v_ref = 0
-                gl.I_motor[i] = 0
+            if tryck > 100 or s_last[i-1] < 0.1: # [Pa] om det är 10 cm kvar på så bromsar den in
+                v_ref = 0
+                I_motor[i] = 0
 
             else: # annars så drar den upp båten som vanligt
-                gl.v_ref = -0.0366
+                v_ref = -0.0366
             
 
         if spärr == True: # om spärren är på
-            gl.v_ref = 0
-            gl.I_motor[i] = 0
+            v_ref = 0
+            I_motor[i] = 0
 
 
-        gl.T_l[i] = gl.F_last[i]*r_vinsch 
-        gl.T_dev[i] = (gl.T_l[i]/(gl.k * gl.f))
+        T_l[i] = F_last[i]*r_vinsch 
+        T_dev[i] = (T_l[i]/(k * f))
 
         if spärr == False:
-            gl.I_motor[i] = gl.T_dev[i]/gl.Ke
-        if gl.T_dev[i]/gl.Ke > gl.maxI: 
+            I_motor[i] = T_dev[i]/Ke
+        if T_dev[i]/Ke > maxI: 
             # Om systemet vill få mer ström än vad elmotorn klarar av så stängs systemet av
             spärr = True
         
 
-        gl.w_motor[i] = (gl.U_motor[i] - gl.R*gl.I_motor[i])/gl.Ke
+        w_motor[i] = (U_motor[i] - R*I_motor[i])/Ke
         # Här tar vi ut spänningen och strömmen från systemet med sensorer
         # och sen använder vi dessa värden för att göra en virituell sensor för att hålla koll på hastigheten.
         
-        gl.w_last[i] = gl.w_motor[i]/gl.k
-        gl.v_last[i] = gl.w_last[i]*r_vinsch
+        w_last[i] = w_motor[i]/k
+        v_last[i] = w_last[i]*r_vinsch
 
         
-        gl.P_batt[i] = gl.I_motor[i]*gl.U_motor[i]
-        gl.P_motor[i] = gl.T_dev[i]*gl.w_motor[i]
-        gl.I_batt[i] = gl.P_batt[i]/gl.U_batt
+        P_batt[i] = I_motor[i]*U_motor[i]
+        P_motor[i] = T_dev[i]*w_motor[i]
+        I_batt[i] = P_batt[i]/U_batt
         
-        if i < gl.N-1:
-            gl.U_motor[i+1] = ((pid.update(gl.v_last[i-1], gl.v_ref)/r_vinsch)*gl.k)*gl.Ke + gl.R*gl.I_motor[i] # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
-            if gl.U_motor[i+1] > gl.maxU:
-                gl.U_motor[i+1] = gl.maxU
-            elif gl.U_motor[i+1] < -gl.maxU:
-                gl.U_motor[i+1] = -gl.maxU
+        if i < N-1:
+            U_motor[i+1] = ((pid.update(v_last[i-1], v_ref)/r_vinsch)*k)*Ke + R*I_motor[i] # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
+            if U_motor[i+1] > maxU:
+                U_motor[i+1] = maxU
+            elif U_motor[i+1] < -maxU:
+                U_motor[i+1] = -maxU
 
         if i > 0: #Eulers metod
-            gl.a_last[i] = (gl.v_last[i] - gl.v_last[i-1]) / gl.dt
-            gl.s_last[i] = gl.s_last[i-1] + gl.dt*gl.v_last[i]
-            gl.W_batt[i] = gl.W_batt[i-1] + gl.dt*gl.P_batt[i]
+            a_last[i] = (v_last[i] - v_last[i-1]) / dt
+            s_last[i] = s_last[i-1] + dt*v_last[i]
+            W_batt[i] = W_batt[i-1] + dt*P_batt[i]
 
 
     plt.figure(1)
-    plt.plot(t, gl.v_last)
+    plt.plot(t, v_last)
     plt.xlabel('tid')
     plt.ylabel('hastighet [m/s]')
 
     plt.figure(2)
-    plt.plot(t, gl.s_last)
+    plt.plot(t, s_last)
     plt.xlabel('tid')
     plt.ylabel('distans [m]')
     
     plt.figure(3)
-    plt.plot(t, gl.a_last)
+    plt.plot(t, a_last)
     plt.xlabel('tid')
     plt.ylabel('acceleration [m/s^2]')
 
     
     plt.figure(4)
-    plt.plot(t, gl.I_motor)
+    plt.plot(t, I_motor)
     plt.xlabel('tid')
     plt.ylabel('ström [A]')
 
     plt.figure(5)
-    plt.plot(t, gl.U_motor)
+    plt.plot(t, U_motor)
     plt.xlabel('tid')
     plt.ylabel('spänning [V]')
     
