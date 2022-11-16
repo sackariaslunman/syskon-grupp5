@@ -46,7 +46,7 @@ N = round (T/dt)        # antal steg att simulera avrundat till heltal
 v_last = np.zeros(N)    # [m/s]     Hastighet på vinsch - begynelsevärde
 a_last = np.zeros(N)    # [m/s^2]   Acceleration på vinsch - begynelsevärd
 s_last = np.zeros(N)    # [m]       Sträckan på last - begynelsevärde
-spärr = bool # det som bes[] tämmer om systemet skall stanna eller ej. Bestäms genom trycksensor. 
+spärr = bool # det som bestämmer om systemet skall stanna eller ej. Bestäms genom trycksensor. 
 F_last = np.zeros(N)    # [N]       Kraften lasten verkar med på systemet / vinschen. 
 w_motor = np.zeros(N)   # [rad/s]   Rotationshastigheten motorn.
 T_l = np.zeros(N)       # [Nm]      Det utvecklade momentet från systemet och lsaten på vinschen. 
@@ -63,3 +63,5 @@ U_batt = 12             # [V]       Spänningen som batteriet alltid förser.
 v_ref = 0.0366          # [m/s]     Referenssignalen till PI - regulatorn. 
 Kp = 0.1                # Propotionella konstanten av en regulator. 'P' delen. 
 Ki = 1                  # Integrala konstanten av en regulator. 'I' delen. 
+Kd = 0                  # Deriverade konstanten av en regulator 'D' delen. Satt till 0 då vi 
+                        # bara har PI regulator. (Vi behöver inget PID)
