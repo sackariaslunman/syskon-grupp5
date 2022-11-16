@@ -14,7 +14,7 @@ from pid import PID
 def main():
     spärr = False
     # PI-kontroller (deriveringen är känslig för noise)
-    pid = PID(Kp, Ki, 0, dt, (maxwmotor/k), -(maxwmotor/k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+    pid = PID(Kp, Ki, Kd, dt, (maxwmotor/k), -(maxwmotor/k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
                                                                               # Elmotorns max rotations 
     tryck = 0
     v_ref = 0.0366

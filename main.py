@@ -2,7 +2,6 @@ import numpy as np
 import math
 from matplotlib import pyplot as plt
 
-
 #motorns variabler
 resistans = 0.0459 # [R] resistans
 spänningskonstant = 0.0184
