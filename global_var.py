@@ -11,7 +11,7 @@ maxU = 10.67        # [V] Max spänning ur motorn
 maxI = 28.8         # [I] Max ström genom motorn. 
 R = 0.0459          # [Ohm] Inre resistans hos motorn. 
 Ke = 0.0184         # Spänningskonstanten i motorn. Antas vara samma som Ki. 
-J = 0.1
+J = 0.0012
 
 """
 Växellådans värden:
@@ -22,7 +22,7 @@ f = 0.95**5         # Förluster i växellådan. 5 % per steg.
 """
 Trailer och last (gravitation med): 
 """
-m_last = 1500 #* 0.5
+m_last = 1500 * 1
 g = 9.82            # [m/s^2] gravitationskonstanten.
 w_last_ref = 0.733  # [w] rad/s
 s_total = 6.6       # [m] Meter vilket är den totala sträckan båten kommer färdas i. 
@@ -62,7 +62,7 @@ W_batt = np.zeros(N)    # [W]       Effekt av något.
 I_batt = np.zeros(N)    # [A]       Strömmen som batteriet förser
 U_batt = 12             # [V]       Spänningen som batteriet alltid förser. 
 v_ref = 0.0366          # [m/s]     Referenssignalen till PI - regulatorn. 
-Kp = 0.1                # Propotionella konstanten av en regulator. 'P' delen. 
+Kp = 0.01                # Propotionella konstanten av en regulator. 'P' delen. 
 Ki = 1                  # Integrala konstanten av en regulator. 'I' delen. 
 Kd = 0                  # Deriverade konstanten av en regulator 'D' delen. Satt till 0 då vi 
                         # bara har PI regulator. (Vi behöver inget PID)

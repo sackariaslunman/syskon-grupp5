@@ -22,9 +22,16 @@ def main():
         T_dev[i] = (T_l[i]/(k * f))
 
         w_motor[i] = (Ke * dt * U_motor[i] - dt * T_dev[i] * R + J * R * w_motor[i-1]) / (J * R + dt * Ke**2)
-        I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/Ke
+        I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) / dt + T_dev[i])/Ke
         # Här tar vi ut spänningen och strömmen från systemet med sensorer
-        # och sen använder vi dessa värden för att göra en virituell sensor för att hålla koll på hastigheten.
+        # och sen använder vi dessa värden för att göramjn en virituell sensor för att hålla koll på hastigheten.
+
+        if abs(I_motor[i]) > maxI:
+            if I_motor[i] > 0: 
+                I_motor[i] = maxI
+            elif I_motor[i] < 0:
+                I_motor[i] = -maxI
+            w_motor[i] = (U_motor[i] - R*I_motor[i]) / Ke
         
         # Virtuella sensorn mäter hastighet på vajer
         w_last[i] = w_motor[i]/k
