@@ -10,20 +10,59 @@ Simulering och tidssteg osv:
 t = np.arange(0., T, dt)
 
 from pid import PID
+
 def main():
+    spärr = False
+    # PI-kontroller (deriveringen är känslig för noise)
+    pid = PID(Kp, Ki, 0, dt, (maxwmotor/k), -(maxwmotor/k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+                                                                              # Elmotorns max rotations 
+    tryck = 0
+    v_ref = 0.0366
     for i in range(N):
-        F_a = a_last[i]*m_last*0.5 #accelerations kraften utanför för det är samma i alla lägen
+        F_a = a_last[i]*m_last #accelerations kraften utanför för det är samma i alla lägen
         r_vinsch = 0.05*(l_vajer/(l_vajer + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
-        F_last[i] =(F + F_f + F_a)
         
+        if(s_last[i-1] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
+            v_ref = 0.0366
+            F_last[i] =(F - F_f + F_a)
+
+        elif(s_last[i-1] >= 6 and s_last[i-1] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
+            v_ref= 0.0366
+            F_last[i] =(F_a/math.cos(12))
+
+        elif((s_last[i-1] > 8 and v_ref > 0) or (s_last[i-1] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
+            
+            v_ref = -0.0366
+            F_last[i] =(F_a/math.cos(12))
+
+        else: #Båten är på trailern och dras upp
+            F_last[i] =(F + F_f + F_a)
+
+            if tryck > 100 or s_last[i-1] < 0.1: # [Pa] om det är 10 cm kvar på så bromsar den in
+                v_ref = 0
+                I_motor[i] = 0
+
+            else: # annars så drar den upp båten som vanligt
+                v_ref = -0.0366
+            
+
+        if spärr == True: # om spärren är på -> stanna
+            v_ref = 0
+            I_motor[i] = 0
 
         # Kollar vridmomentet för att senare kunna ta ut strömmen
         # Men i vårt verkliga system kommer sensorn att göra det
         T_l[i] = F_last[i]*r_vinsch 
         T_dev[i] = (T_l[i]/(k * f))
 
+        if spärr == False:
+            I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/Ke
+        if T_dev[i]/Ke > maxI: 
+            # Om systemet vill få mer ström än vad elmotorn klarar av så stängs systemet av
+            spärr = True
+        
+
         w_motor[i] = (Ke * dt * U_motor[i] - dt * T_dev[i] * R + J * R * w_motor[i-1]) / (J * R + dt * Ke**2)
-        I_motor[i] = (J*(w_motor[i] - w_motor[i-1]) + T_dev[i])/Ke
         # Här tar vi ut spänningen och strömmen från systemet med sensorer
         # och sen använder vi dessa värden för att göra en virituell sensor för att hålla koll på hastigheten.
         
@@ -34,7 +73,7 @@ def main():
         
         # Här beräknas spänningen för nästa tidssteg med vår regulator
         if i < N-1:
-            U_motor[i+1] = ((maxU * 0.5 /r_vinsch)*k)*Ke + R*I_motor[i] 
+            U_motor[i+1] = ((pid.update(v_last[i-1], v_ref)/r_vinsch)*k)*Ke + R*I_motor[i] 
             if U_motor[i+1] > maxU:
                 U_motor[i+1] = maxU
             elif U_motor[i+1] < -maxU:
