@@ -1,8 +1,9 @@
 class PID:
-    def __init__(self, Kp = 0., Ki = 0., dt = 0.001, max_u = None, min_u = None):
+    def __init__(self, Kp = 0., Ki = 0., Kd = 0., dt = 0.001, max_u = None, min_u = None):
         # Skapar PID-regulatorn med de olika konstanterna, dt vilket är samplingsintervallet (/h), samt min och max spänning. 
         self.Kp = Kp
         self.Ki = Ki
+        self.Kd = Kd
         
         self.dt = dt
         self.u = 0
@@ -30,9 +31,10 @@ class PID:
         P = self.Kp * error                                 # Kp*e  
         I = self.Ki *(self.I_prev + self.dt * error)
         self.I_prev = I                      # Ki * \integral (e dt)
-        # D = self.Kd * (error - self.prev__error) / self.dt  Kd * de/dt
+        D = self.Kd * (error - self.prev__error) / self.dt  # Kd * de/dt
+
         # self.u0 = self.u
-        self.u = P + I # Kp*e + Ki* \integral (e dt) + Kd * de/dt (precis som från föreläsningarna)
+        self.u = P + I + D # Kp*e + Ki* \integral (e dt) + Kd * de/dt (precis som från föreläsningarna)
         if self.u > self.max:      # Se till så att vi inte överskrider max/min spänning. 
             self.u = 0.001
         elif self.u < self.min:

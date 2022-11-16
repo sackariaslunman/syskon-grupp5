@@ -13,7 +13,8 @@ from pid import PID
 
 def main():
     spärr = False
-    pid = PID(gl.Kp, gl.Ki, gl.dt, (gl.maxwmotor/gl.k), -(gl.maxwmotor/gl.k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
+    # PI-kontroller (deriveringen är känslig för noise)
+    pid = PID(gl.Kp, gl.Ki, 0, gl.dt, (gl.maxwmotor/gl.k), -(gl.maxwmotor/gl.k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
                                                                               # Elmotorns max rotations 
     tryck = 0
     gl.v_ref = 0.0366
