@@ -68,9 +68,6 @@ def main():
         gl.v_last[i] = gl.w_last[i]*r_vinsch
 
         
-        gl.P_batt[i] = gl.I_motor[i]*gl.U_motor[i]
-        gl.P_motor[i] = gl.T_dev[i]*gl.w_motor[i]
-        gl.I_batt[i] = gl.P_batt[i]/gl.U_batt
         
         if i < gl.N-1:
             gl.U_motor[i+1] = ((pid.update(gl.v_last[i-1], gl.v_ref)/r_vinsch)*gl.k)*gl.Ke + gl.R*gl.I_motor[i] # Får ut fel värde just nu, vi vill få spänning men får v_ref istället
