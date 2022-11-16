@@ -11,7 +11,7 @@ maxU = 10.67        # [V] Max spänning ur motorn
 maxI = 28.8         # [I] Max ström genom motorn. 
 R = 0.0459          # [Ohm] Inre resistans hos motorn. 
 Ke = 0.0184         # Spänningskonstanten i motorn. Antas vara samma som Ki. 
-J = 0
+J = 0.1
 
 """
 Växellådans värden:
