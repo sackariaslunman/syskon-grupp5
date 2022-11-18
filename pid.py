@@ -14,7 +14,7 @@ class PID:
         self.prev_ref = 0
         self.new_ref = 0
         self.I_prev = 0
-    def update(self, input, r_ref):
+    def update(self, input, r_ref, r_vinsch, k, Ke, R, I_motor):
         # Själva användandet av regulatorn. 
         
         if self.prev_ref != r_ref:
@@ -36,9 +36,11 @@ class PID:
         # self.u0 = self.u
         self.u = P + I + D # Kp*e + Ki* \integral (e dt) + Kd * de/dt (precis som från föreläsningarna)
         if self.u > self.max:      # Se till så att vi inte överskrider max/min spänning. 
-            self.u = 0.001
+            self.u = self.max
         elif self.u < self.min:
-            self.u = 0.001
+            self.u = self.max
         self.prev__error = error
         self.prev_ref = r_ref
-        return self.u                                       # den resulterade spänningen som vi skickar till motorn. 
+
+        # den resulterade spänningen som vi skickar till motorn. 
+        return (self.u/r_vinsch)*k*Ke + R*I_motor

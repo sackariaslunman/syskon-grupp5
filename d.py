@@ -85,7 +85,8 @@ def main():
         
         # Här beräknas spänningen för nästa tidssteg med vår regulator
         if i < N-1:
-            U_motor[i+1] = ((pid.update(v_last[i], v_ref)/r_vinsch)*k)*Ke + R*I_motor[i] 
+            # skickar in alla parametrar som behövs för att få ut den nya spänningen till regulatorn.
+            U_motor[i+1] = pid.update(v_last[i], v_ref, r_vinsch ,k ,Ke ,R ,I_motor[i])
 
             #Om förändringen i spänning blir för stor så önskar systemet mer ström än vad motorn klarar av
             #men då ändras spänningen så att strömmen blir till sin max strm istället.
