@@ -71,14 +71,12 @@ def main():
         
         if spärr == False:
             I_motor[i] = (J*(w_motor[i] - w_motor[i-1])/dt + T_dev[i])/Ke
-            # Vi har lagt till ett brusfel med ett konstant fel på 0.1% plus ett slupmässigt mätfel mellan 0-0.1%.
-            I_motor_measured[i] = (1 + 0.002 + (random.uniform(-1, 1))*0.001)*I_motor[i] # brusfelet blir random mellan 0.1-0.2%
+            # Vi har lagt till ett brusfel med ett konstant fel på 0.2% plus ett slupmässigt mätfel mellan -0-1% - 0.1%.
+            I_motor_measured[i] = (1 + 0.002 + (random.uniform(-1, 1))*0.001)*I_motor[i] # brusfelet blir random mellan 0.1-0.3%
+
         if abs(I_motor_measured[i])> maxI: 
             # Om systemet vill få mer ström än vad elmotorn klarar av så stängs systemet av
             spärr = True
-
-        I_motor[i] = (1 + 0.001 + (random.uniform(0, 1))*0.001)*I_motor[i] # brusfelet blir random mellan 0.1-0.2%
-
         
         
         # Virtuella sensorn mäter hastighet på vajer

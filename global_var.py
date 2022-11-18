@@ -11,15 +11,15 @@ maxU = 10.67        # [V] Max spänning ur motorn
 maxI = 28.8         # [I] Max ström genom motorn. 
 R = 0.0459          # [Ohm] Inre resistans hos motorn. 
 Ke = 0.0184         # Spänningskonstanten i motorn. Antas vara samma som Ki. 
-J = 0.001           # tröghetsmoment
 
+# beräknar för J
 radie_rotor = 0.05 * 0.6
 längd_rotor = 0.1 * 0.6
 volym_rotor = (längd_rotor * 0.6 * np.pi * (radie_rotor)**2)
 densitet_rotor = 7800
 massa_rotor = volym_rotor * densitet_rotor
-J = (1/2) * massa_rotor * radie_rotor**2
-print("J", J)
+J = (1/2) * massa_rotor * radie_rotor**2 # tröghetsmoment
+
 """
 Växellådans värden:
 """
