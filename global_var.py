@@ -11,6 +11,7 @@ maxU = 10.67        # [V] Max spänning ur motorn
 maxI = 28.8         # [I] Max ström genom motorn. 
 R = 0.0459          # [Ohm] Inre resistans hos motorn. 
 Ke = 0.0184         # Spänningskonstanten i motorn. Antas vara samma som Ki. 
+J = 0.001           # tröghetsmoment
 
 radie_rotor = 0.05 * 0.6
 längd_rotor = 0.1 * 0.6
@@ -51,6 +52,7 @@ N = round (T/dt)        # antal steg att simulera avrundat till heltal
 
 
 v_last = np.zeros(N)    # [m/s]     Hastighet på vinsch - begynelsevärde
+v_last_ref = np.zeros(N)# [m/s]     Referns hastigheten
 a_last = np.zeros(N)    # [m/s^2]   Acceleration på vinsch - begynelsevärd
 s_last = np.zeros(N)    # [m]       Sträckan på last - begynelsevärde
 spärr = bool # det som bestämmer om systemet skall stanna eller ej. Bestäms genom trycksensor. 
