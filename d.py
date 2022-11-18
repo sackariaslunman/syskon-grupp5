@@ -23,11 +23,6 @@ def main():
     for i in range(N):
         F_a = a_last[i]*m_last #accelerations kraften utanför för det är samma i alla lägen
         r_vinsch = 0.05*(l_vajer/(l_vajer + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
-
-
-        # Vi har lagt till ett brusfel med ett konstant fel på 0.1% plus ett slupmässigt mätfel mellan 0-0.1%.
-        U_motor[i] = (1 + 0.001 + (random.uniform(0, 1))*0.001)*U_motor[i] # brusfelet blir random mellan 0.1-0.2%
-        I_motor[i] = (1 + 0.001 + (random.uniform(0, 1))*0.001)*I_motor[i] # brusfelet blir random mellan 0.1-0.2%
         
         if(s_last[i-1] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
             v_ref = 0.0366
@@ -66,7 +61,9 @@ def main():
         
         if spärr == False:
             I_motor[i] = (J*(w_motor[i] - w_motor[i-1])/dt + T_dev[i])/Ke
-        if abs(I_motor[i])> maxI: 
+            # Vi har lagt till ett brusfel med ett konstant fel på 0.1% plus ett slupmässigt mätfel mellan 0-0.1%.
+            I_motor_measured[i] = (1 + 0.002 + (random.uniform(-1, 1))*0.001)*I_motor[i] # brusfelet blir random mellan 0.1-0.2%
+        if abs(I_motor_measured[i])> maxI: 
             # Om systemet vill få mer ström än vad elmotorn klarar av så stängs systemet av
             spärr = True
 
@@ -76,11 +73,10 @@ def main():
         # Virtuella sensorn mäter hastighet på vajer
         w_last[i] = w_motor[i]/k
         v_last[i] = w_last[i]*r_vinsch
-
         
         # Här beräknas spänningen för nästa tidssteg med vår regulator
         if i < N-1:
-            U_motor[i+1] = ((pid.update(v_last[i-1], v_ref)/r_vinsch)*k)*Ke + R*I_motor[i] 
+            U_motor[i+1] = ((pid.update(v_last[i-1], v_ref)/r_vinsch)*k)*Ke + R*I_motor_measured[i] 
 
             #Om förändringen i spänning blir för stor så önskar systemet mer ström än vad motorn klarar av
             #men då ändras spänningen så att strömmen blir till sin max strm istället.
