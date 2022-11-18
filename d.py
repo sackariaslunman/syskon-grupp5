@@ -68,11 +68,8 @@ def main():
             I_motor[i] = (J*(w_motor[i] - w_motor[i-1])/dt + T_dev[i])/Ke
         if abs(I_motor[i])> maxI: 
             # Om systemet vill få mer ström än vad elmotorn klarar av så stängs systemet av
-            if abs(T_dev[i]/Ke) > maxI:
-                spärr = True
- 
+            spärr = True
 
-        
         # Här tar vi ut spänningen och strömmen från systemet med sensorer
         # och sen använder vi dessa värden för att göra en virituell sensor för att hålla koll på hastigheten.
         
