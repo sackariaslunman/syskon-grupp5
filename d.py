@@ -45,8 +45,8 @@ def main():
             F_last[i] =(F + F_f + F_a)
             
             # Om det är 10 cm kvar så bromsar den in pga vi inte har en riktig sensor just nu
-            # För i riktiga systemet så behöver systemet bara stanna när båten trycker på trycksensorn
-            if tryck > 100 or s_last[i-1] < 0.1: # [N] trycksensor när båt är uppe
+            # För i riktiga systemet så behöver systemet bara stanna när båten trycker på töjningsgivaren
+            if tryck > 100 or s_last[i-1] < 0.1: # [N] sensor när båt är uppe
                 
                 v_ref = 0
                 I_motor[i] = 0
