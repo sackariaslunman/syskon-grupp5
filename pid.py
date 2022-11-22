@@ -35,7 +35,7 @@ class PID:
 
         # self.u0 = self.u
         self.u = P + I + D # Kp*e + Ki* \integral (e dt) + Kd * de/dt (precis som från föreläsningarna)
-        if self.u > self.max:      # Se till så att vi inte överskrider max/min spänning. 
+        if self.u > self.max:      # Se till så att vi inte överskrider max/min rotationshastighet. 
             self.u = self.max
         elif self.u < self.min:
             self.u = self.max
