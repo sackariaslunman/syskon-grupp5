@@ -12,7 +12,7 @@ t = np.arange(0., T, dt)
 
 from pid import PID
 
-def main():
+def main(verbose = True):
     spärr = False
     # PI-kontroller (deriveringen är känslig för noise)
     pid = PID(Kp, Ki, Kd, dt, (maxwmotor/k), -(maxwmotor/k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
@@ -106,29 +106,81 @@ def main():
             a_last[i] = (v_last[i] - v_last[i-1]) / dt
             s_last[i] = s_last[i-1] + dt*v_last[i]
         v_last_ref[i] = v_ref
-    
+
+    E_total = sum(abs(P_batt)) * dt
+
+    if not verbose:
+        return E_total
+    print(f"Total energi: {round(E_total/1000, 3)} kJ")
 
     """
     Plotta grafer - hastighet, distans, acceleration, ström, spänning 
     """
+    plt.figure(1) # plot av hastigheten beroende på tiden
+    plt.plot(t, v_last)
+    plt.xlabel('tid')
+    plt.ylabel('hastighet [m/s]')
 
-    plt.figure(1)
+    plt.figure(2) # plot av sträckan beroende på tiden
+    plt.plot(t, s_last)
+    plt.xlabel('tid')
+    plt.ylabel('distans [m]')
+    
+    plt.figure(3) # plot av accelerationen beroender på tiden
+    plt.plot(t, a_last)
+    plt.xlabel('tid')
+    plt.ylabel('acceleration [m/s^2]')
+    
+    plt.figure(4) # plot av strömmen i motorn beroende på tiden
+    plt.plot(t, I_motor)
+    plt.xlabel('tid')
+    plt.ylabel('ström [A]')
+
+    plt.figure(5) # plot av strömmen i motorn beroende på tiden
+    plt.plot(t, U_motor)
+    plt.xlabel('tid')
+    plt.ylabel('spänning [V]')
+
+    plt.figure(6)
     plt.plot(t, P_batt)
     plt.xlabel('tid')
     plt.ylabel('Batteri effekt [W]')
 
-    plt.figure(2)
+    plt.figure(7)
     plt.plot(t, P_motor)
     plt.xlabel('tid')
     plt.ylabel('Motorns effekt [W]')
 
-    plt.figure(3)
+    plt.figure(8)
     plt.plot(t, P_last)
     plt.xlabel('tid')
     plt.ylabel('Last effekt [W]')
     
     plt.show()
+    return E_total
 
 
 if __name__ == "__main__":
-    main()
+    calculate_energy_consumption = True
+
+    if not calculate_energy_consumption:
+        main(True)
+
+    else:
+        Es = []
+        n = 1000
+        for i in range(n):
+            E = main(False)
+            Es.append(E)
+            print(f"iteration: {i}, energi: {round(E/1000, 3)} kJ")
+
+        averageE = sum(Es)/n
+        maxE = max(Es)
+        minE = min(Es)
+        
+        print(f"Medel-energiförbrukning: {round(averageE/1000, 3)} kJ")
+        print(f"Max-energiförbrukning: {round(maxE/1000, 3)} kJ")
+        print(f"Min-energiförbrukning: {round(minE/1000, 3)} kJ")
+        deltaE = maxE-averageE if maxE-averageE > averageE-minE else averageE-minE
+        print(f"Mätosäkerhet: {round(deltaE/1000, 3)} kJ")
+
