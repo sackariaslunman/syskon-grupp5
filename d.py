@@ -82,6 +82,12 @@ def main():
         # Virtuella sensorn mäter hastighet på vajer
         w_last[i] = w_motor[i]/k
         v_last[i] = w_last[i]*r_vinsch
+
+        #Energiförbrukning
+        P_last[i] = (T_l[i]*w_last[i])
+        P_motor[i] =(T_dev[i]*w_motor[i])
+        P_batt[i] =(I_motor[i]*U_motor[i])
+        I_batt[i] =(P_batt[i]/U_batt)
         
         # Här beräknas spänningen för nästa tidssteg med vår regulator
         if i < N-1:
@@ -107,35 +113,19 @@ def main():
     """
 
     plt.figure(1)
-    plt.plot(t, v_last)
+    plt.plot(t, P_batt)
     plt.xlabel('tid')
-    plt.ylabel('hastighet [m/s]')
+    plt.ylabel('Batteri effekt [W]')
 
     plt.figure(2)
-    plt.plot(t, v_last_ref)
+    plt.plot(t, P_motor)
     plt.xlabel('tid')
-    plt.ylabel('hastighets referns [m/s]')
+    plt.ylabel('Motorns effekt [W]')
 
     plt.figure(3)
-    plt.plot(t, s_last)
+    plt.plot(t, P_last)
     plt.xlabel('tid')
-    plt.ylabel('distans [m]')
-    
-    plt.figure(4)
-    plt.plot(t, a_last)
-    plt.xlabel('tid')
-    plt.ylabel('acceleration [m/s^2]')
-
-    
-    plt.figure(5)
-    plt.plot(t, I_motor)
-    plt.xlabel('tid')
-    plt.ylabel('ström [A]')
-
-    plt.figure(6)
-    plt.plot(t, U_motor)
-    plt.xlabel('tid')
-    plt.ylabel('spänning [V]')
+    plt.ylabel('Last effekt [W]')
     
     plt.show()
 
