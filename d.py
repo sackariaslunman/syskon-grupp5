@@ -174,7 +174,7 @@ def main(verbose = True):
 
 
 if __name__ == "__main__":
-    calculate_energy_consumption = True
+    calculate_energy_consumption = False
 
     if not calculate_energy_consumption:
         main(True)
