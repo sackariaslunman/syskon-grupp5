@@ -31,6 +31,7 @@ f = 0.95**5         # Förluster i växellådan. 5 % per steg.
 Trailer och last (gravitation med): 
 """
 m_last = 1500 * 1
+m_vajer = 1
 g = 9.82            # [m/s^2] gravitationskonstanten.
 w_last_ref = 0.733  # [w] rad/s
 s_total = 6.6       # [m] Meter vilket är den totala sträckan båten kommer färdas i. 
@@ -41,14 +42,23 @@ l_vajer = 8.        # [m] Meter.
 """
 Beräknade värden: 
 """
-F = m_last * g * math.sin(12*2*math.pi/360) #vertikaltlyft
+def F(endast_vajer = False):
+    m = m_vajer
+    if not endast_vajer:
+        m += m_last
+    return m * g * math.sin(12*2*math.pi/360) #vertikaltlyft
+
 cr = 0.05 # Friktionskonstanten
-F_f = cr * m_last * g * math.cos(12*2*math.pi/360)       # Friktionskraften. 
+def F_f(endast_vajer):
+    m = m_vajer
+    if not endast_vajer:
+        m += m_last
+    return cr * m * g * math.cos(12*2*math.pi/360)       # Friktionskraften. 
 v_last = s_total*simulation_duration
 
 
 dt = 0.01               # [s], sekunder per tidssteg för simulering
-T = 500.0               # [s], sekunder för hela simuleringen
+T = 900.0               # [s], sekunder för hela simuleringen
 N = round (T/dt)        # antal steg att simulera avrundat till heltal
 
 
@@ -76,3 +86,5 @@ Kp = 0.1               # Propotionella konstanten av en regulator. 'P' delen.
 Ki = 1                  # Integrala konstanten av en regulator. 'I' delen. 
 Kd = 0                  # Deriverade konstanten av en regulator 'D' delen. Satt till 0 då vi 
                         # bara har PI regulator. (Vi behöver inget PID)
+
+no_boat = False

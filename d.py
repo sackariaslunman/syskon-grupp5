@@ -19,6 +19,8 @@ def main(verbose = True):
                                                                               # Elmotorns max rotations 
     tryck = 0
     v_ref = 0.0366
+    no_boat = False
+    i_cycle_switch = -1
 
     for i in range(N):
         F_a = a_last[i]*m_last #accelerations kraften utanför för det är samma i alla lägen
@@ -30,26 +32,29 @@ def main(verbose = True):
         
         if(s_last[i-1] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
             v_ref = 0.0366
-            F_last[i] =(F - F_f + F_a)
+            F_last[i] =(F(no_boat) - F_f(no_boat) + F_a)
 
         elif(s_last[i-1] >= 6 and s_last[i-1] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
             v_ref= 0.0366
             F_last[i] =(F_a/math.cos(12))
 
         elif((s_last[i-1] > 8 and v_ref > 0) or (s_last[i-1] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
-            
+            no_boat = not no_boat
             v_ref = -0.0366
             F_last[i] =(F_a/math.cos(12))
 
         else: #Båten är på trailern och dras upp
-            F_last[i] =(F + F_f + F_a)
+            F_last[i] =(F(no_boat) + F_f(no_boat) + F_a)
             
             # Om det är 10 cm kvar så bromsar den in pga vi inte har en riktig sensor just nu
             # För i riktiga systemet så behöver systemet bara stanna när båten trycker på töjningsgivaren
             if tryck > 100 or s_last[i-1] < 0.1: # [N] sensor när båt är uppe
-                
-                v_ref = 0
-                I_motor[i] = 0
+                if no_boat:
+                    v_ref = 0.0366
+                    i_cycle_switch = i
+                else:
+                    v_ref = 0
+                    I_motor[i] = 0
 
             else: # annars så drar den upp båten som vanligt
                 v_ref = -0.0366
@@ -107,11 +112,14 @@ def main(verbose = True):
             s_last[i] = s_last[i-1] + dt*v_last[i]
         v_last_ref[i] = v_ref
 
-    E_total = sum(abs(P_batt)) * dt
+
+    E_total_1 = sum(abs(P_batt[:i_cycle_switch])) * dt
+    E_total_2 = sum(abs(P_batt[i_cycle_switch:])) * dt
 
     if not verbose:
-        return E_total
-    print(f"Total energi: {round(E_total/1000, 3)} kJ")
+        return E_total_1, E_total_2
+    print(f"Total energi användningscykel 1: {round(E_total_1/1000, 3)} kJ")
+    print(f"Total energi användningscykel 2: {round(E_total_2/1000, 3)} kJ")
 
     """
     Plotta grafer - hastighet, distans, acceleration, ström, spänning 
@@ -155,9 +163,14 @@ def main(verbose = True):
     plt.plot(t, P_last)
     plt.xlabel('tid')
     plt.ylabel('Last effekt [W]')
+
+    plt.figure(9)
+    plt.plot(t, F_last)
+    plt.xlabel('tid')
+    plt.ylabel('F last [N]')
     
     plt.show()
-    return E_total
+    return E_total_1, E_total_2
 
 
 if __name__ == "__main__":
@@ -168,19 +181,21 @@ if __name__ == "__main__":
 
     else:
         Es = []
-        n = 1000
+        n = 200
         for i in range(n):
-            E = main(False)
-            Es.append(E)
-            print(f"iteration: {i}, energi: {round(E/1000, 3)} kJ")
+            E1, E2 = main(False)
+            Es.append(E1)
+            Es.append(E2)
+            print(f"iteration: {i}, energi 1: {round(E1/1000, 3)} kJ, energi 2: {round(E2/1000, 3)} kJ")
 
-        averageE = sum(Es)/n
+        averageE = sum(Es)/len(Es)
         maxE = max(Es)
         minE = min(Es)
-        
+
+        print()
         print(f"Medel-energiförbrukning: {round(averageE/1000, 3)} kJ")
         print(f"Max-energiförbrukning: {round(maxE/1000, 3)} kJ")
         print(f"Min-energiförbrukning: {round(minE/1000, 3)} kJ")
         deltaE = maxE-averageE if maxE-averageE > averageE-minE else averageE-minE
-        print(f"Mätosäkerhet: {round(deltaE/1000, 3)} kJ")
+        print(f"Mätosäkerhet: {round(deltaE/1000, 3)} kJ, {round(deltaE/averageE*100, 3)}%")
 
