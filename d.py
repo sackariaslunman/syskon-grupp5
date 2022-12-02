@@ -180,22 +180,26 @@ if __name__ == "__main__":
         main(True)
 
     else:
-        Es = []
-        n = 200
+        E1s = []
+        E2s = []
+
+        n = 1000
         for i in range(n):
             E1, E2 = main(False)
-            Es.append(E1)
-            Es.append(E2)
+            E1s.append(E1)
+            E2s.append(E2)
             print(f"iteration: {i}, energi 1: {round(E1/1000, 3)} kJ, energi 2: {round(E2/1000, 3)} kJ")
 
-        averageE = sum(Es)/len(Es)
-        maxE = max(Es)
-        minE = min(Es)
-
         print()
-        print(f"Medel-energiförbrukning: {round(averageE/1000, 3)} kJ")
-        print(f"Max-energiförbrukning: {round(maxE/1000, 3)} kJ")
-        print(f"Min-energiförbrukning: {round(minE/1000, 3)} kJ")
-        deltaE = maxE-averageE if maxE-averageE > averageE-minE else averageE-minE
-        print(f"Mätosäkerhet: {round(deltaE/1000, 3)} kJ, {round(deltaE/averageE*100, 3)}%")
+        for i, Es in enumerate([E1s, E2s]):
+            print("Användningscykel:", i+1)
+            averageE = sum(Es)/len(Es)
+            maxE = max(Es)
+            minE = min(Es)
 
+            print(f"Medel-energiförbrukning: {round(averageE/1000, 3)} kJ")
+            print(f"Max-energiförbrukning: {round(maxE/1000, 3)} kJ")
+            print(f"Min-energiförbrukning: {round(minE/1000, 3)} kJ")
+            deltaE = maxE-averageE if maxE-averageE > averageE-minE else averageE-minE
+            print(f"Mätosäkerhet: {round(deltaE/1000, 3)} kJ = {round(deltaE/averageE*100, 2)}%")
+            print()
