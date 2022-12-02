@@ -188,7 +188,7 @@ if __name__ == "__main__":
             E1, E2 = main(False)
             E1s.append(E1)
             E2s.append(E2)
-            print(f"iteration: {i}, energi 1: {round(E1/1000, 3)} kJ, energi 2: {round(E2/1000, 3)} kJ")
+            print(f"iteration: {i}\tenergi 1: {round(E1/1000, 3)} kJ\tenergi 2: {round(E2/1000, 3)} kJ")
 
         print()
         for i, Es in enumerate([E1s, E2s]):
