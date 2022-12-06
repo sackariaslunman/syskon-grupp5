@@ -19,7 +19,7 @@ längd_rotor = 0.1 * 0.6
 volym_rotor = (längd_rotor * 0.6 * np.pi * (radie_rotor)**2)
 densitet_rotor = 7800
 massa_rotor = volym_rotor * densitet_rotor
-J = (1/2) * massa_rotor * radie_rotor**2 # tröghetsmoment uträknat som en cylinder
+J = 0 #(1/2) * massa_rotor * radie_rotor**2 # tröghetsmoment uträknat som en cylinder
 
 """
 Växellådans värden:

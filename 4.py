@@ -18,29 +18,28 @@ def main(verbose = True):
     pid = PID(Kp, Ki, Kd, dt, (maxwmotor/k), -(maxwmotor/k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
                                                                               # Elmotorns max rotations 
     tryck = 0
-    v_ref = 0.0366
+    v_ref = -0.0366
     no_boat = False
     i_cycle_switch = -1
-
+    print(range(N))
     for i in range(N):
         F_a = a_last[i]*m_last #accelerations kraften utanför för det är samma i alla lägen
-        r_vinsch = 0.05*(l_vajer/(l_vajer + (s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
+        r_vinsch = 0.05 # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
 
 
         # Vi har lagt till ett brusfel med ett konstant fel på 0.1% plus ett slupmässigt mätfel mellan 0-0.1%.
         U_motor[i] = (1 + 0.001 + (random.uniform(0, 1))*0.001)*U_motor[i] # brusfelet blir random mellan 0.1-0.2%
         
-        if(s_last[i-1] < 6 and v_ref > 0): # Båten är på trailern och åker ner mot vattnet
-            v_ref = 0.0366
+        if(s_last[i-1] > -6 and v_ref < 0): # Båten är på trailern och åker ner mot vattnet
+            v_ref = -0.0366
             F_last[i] =(F(no_boat) - F_f(no_boat) + F_a)
 
-        elif(s_last[i-1] >= 6 and s_last[i-1] <= 8 and v_ref >0): # Båten åker ut i vattnet i 2 meter
-            v_ref= 0.0366
+        elif(s_last[i-1] <= -6 and s_last[i-1] >= -8 and v_ref < 0): # Båten åker ut i vattnet i 2 meter
+            v_ref= -0.0366
             F_last[i] =(F_a/math.cos(12))
 
-        elif((s_last[i-1] > 8 and v_ref > 0) or (s_last[i-1] > 6 and v_ref < 0)): # Båten vänder riktning i vattnet och åker mot trailer
-            no_boat = not no_boat
-            v_ref = -0.0366
+        elif((s_last[i-1] < -8 and v_ref < 0) or (s_last[i-1] < -6 and v_ref > 0)): # Båten vänder riktning i vattnet och åker mot trailer
+            v_ref = 0.0366
             F_last[i] =(F_a/math.cos(12))
 
         else: #Båten är på trailern och dras upp
@@ -48,16 +47,11 @@ def main(verbose = True):
             
             # Om det är 10 cm kvar så bromsar den in pga vi inte har en riktig sensor just nu
             # För i riktiga systemet så behöver systemet bara stanna när båten trycker på töjningsgivaren
-            if tryck > 100 or s_last[i-1] < 0.1: # [N] sensor när båt är uppe
-                if no_boat:
-                    v_ref = 0.0366
-                    i_cycle_switch = i
-                else:
-                    v_ref = 0
-                    I_motor[i] = 0
+            if tryck > 100 or s_last[i-1] > -0.1: # [N] sensor när båt är uppe
+                    spärr = True
 
             else: # annars så drar den upp båten som vanligt
-                v_ref = -0.0366
+                v_ref = 0.0366
             
 
         if spärr == True: # om spärren är på -> stanna
