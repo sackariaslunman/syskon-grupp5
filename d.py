@@ -89,7 +89,7 @@ def main(verbose = True):
         v_last[i] = w_last[i]*r_vinsch
 
         #Energiförbrukning
-        P_last[i] = (T_l[i]*w_last[i])
+        P_last[i] = (F_last[i]*v_last[i])
         P_motor[i] =(T_dev[i]*w_motor[i])
         P_batt[i] =(I_motor[i]*U_motor[i])
         I_batt[i] =(P_batt[i]/U_batt)
