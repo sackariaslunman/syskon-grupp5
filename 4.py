@@ -18,28 +18,28 @@ def main(verbose = True):
     pid = PID(Kp, Ki, Kd, dt, (maxwmotor/k), -(maxwmotor/k)) # skapar regulatorn med konstanterna Kp = 0.005, Ki = 0.0002, Kd = 0.001 och max min
                                                                               # Elmotorns max rotations 
     tryck = 0
-    v_ref = -0.0366
+    v_ref = -0.0366*0.1
     no_boat = False
     i_cycle_switch = -1
     print(range(N))
     for i in range(N):
         F_a = a_last[i]*m_last #accelerations kraften utanför för det är samma i alla lägen
-        r_vinsch = 0.05 # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
+        r_vinsch = 0.05*(l_vajer/(l_vajer + abs(s_last[i-1]*(1/3)))) # Funktion för vinschradiens förhållande till båtens position. (Förklaras i 'a' i rapport)
 
 
         # Vi har lagt till ett brusfel med ett konstant fel på 0.1% plus ett slupmässigt mätfel mellan 0-0.1%.
         U_motor[i] = (1 + 0.001 + (random.uniform(0, 1))*0.001)*U_motor[i] # brusfelet blir random mellan 0.1-0.2%
         
         if(s_last[i-1] > -6 and v_ref < 0): # Båten är på trailern och åker ner mot vattnet
-            v_ref = -0.0366
+            v_ref = -0.0366*0.1
             F_last[i] =(F(no_boat) - F_f(no_boat) + F_a)
 
         elif(s_last[i-1] <= -6 and s_last[i-1] >= -8 and v_ref < 0): # Båten åker ut i vattnet i 2 meter
-            v_ref= -0.0366
+            v_ref= -0.0366*0.1
             F_last[i] =(F_a/math.cos(12))
 
         elif((s_last[i-1] < -8 and v_ref < 0) or (s_last[i-1] < -6 and v_ref > 0)): # Båten vänder riktning i vattnet och åker mot trailer
-            v_ref = 0.0366
+            v_ref = 0.0366*0.1
             F_last[i] =(F_a/math.cos(12))
 
         else: #Båten är på trailern och dras upp
@@ -51,7 +51,7 @@ def main(verbose = True):
                     spärr = True
 
             else: # annars så drar den upp båten som vanligt
-                v_ref = 0.0366
+                v_ref = 0.0366*0.1
             
 
         if spärr == True: # om spärren är på -> stanna
@@ -87,10 +87,10 @@ def main(verbose = True):
         if(w_last[i] < 0):
             P_last[i] = (F_last[i]*v_last[i])
             P_motor[i] = P_last[i]*f
-            P_batt[i] = P_motor[i] - R*I_motor[i]
+            P_batt[i] = P_motor[i] + R*(I_motor[i])**2
         else:
             P_batt[i] =(I_motor[i]*U_motor[i])
-            P_motor[i] =P_batt[i] - R*I_motor[i]
+            P_motor[i] =P_batt[i] - R*(I_motor[i])**2
             P_last[i] = P_motor[i]*f
         
         # Här beräknas spänningen för nästa tidssteg med vår regulator
@@ -123,30 +123,15 @@ def main(verbose = True):
     """
     Plotta grafer - hastighet, distans, acceleration, ström, spänning 
     """
-    plt.figure(1) # plot av hastigheten beroende på tiden
-    plt.plot(t, v_last)
-    plt.xlabel('tid')
-    plt.ylabel('hastighet [m/s]')
-
-    plt.figure(2) # plot av sträckan beroende på tiden
-    plt.plot(t, s_last)
-    plt.xlabel('tid')
-    plt.ylabel('distans [m]')
-    
-    plt.figure(3) # plot av accelerationen beroender på tiden
-    plt.plot(t, a_last)
-    plt.xlabel('tid')
-    plt.ylabel('acceleration [m/s^2]')
-    
-    plt.figure(4) # plot av strömmen i motorn beroende på tiden
+    plt.figure(4)
     plt.plot(t, I_motor)
     plt.xlabel('tid')
-    plt.ylabel('ström [A]')
+    plt.ylabel('motor ström [A]')
 
-    plt.figure(5) # plot av strömmen i motorn beroende på tiden
+    plt.figure(5)
     plt.plot(t, U_motor)
     plt.xlabel('tid')
-    plt.ylabel('spänning [V]')
+    plt.ylabel('motor spänning [V]')
 
     plt.figure(6)
     plt.plot(t, P_batt)
@@ -162,11 +147,6 @@ def main(verbose = True):
     plt.plot(t, P_last)
     plt.xlabel('tid')
     plt.ylabel('Last effekt [W]')
-
-    plt.figure(9)
-    plt.plot(t, F_last)
-    plt.xlabel('tid')
-    plt.ylabel('F last [N]')
     
     plt.show()
     return E_total_1, E_total_2

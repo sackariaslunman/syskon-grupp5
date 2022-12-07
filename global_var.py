@@ -58,7 +58,7 @@ v_last = s_total*simulation_duration
 
 
 dt = 0.01               # [s], sekunder per tidssteg för simulering
-T = 900.0               # [s], sekunder för hela simuleringen
+T = 500.0               # [s], sekunder för hela simuleringen
 N = round (T/dt)        # antal steg att simulera avrundat till heltal
 
 
