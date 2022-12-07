@@ -84,10 +84,14 @@ def main(verbose = True):
         v_last[i] = w_last[i]*r_vinsch
 
         #Energiförbrukning
-        P_last[i] = (F_last[i]*v_last[i])
-        P_motor[i] =(T_dev[i]*w_motor[i])
-        P_batt[i] =(I_motor[i]*U_motor[i])
-        I_batt[i] =(P_batt[i]/U_batt)
+        if(w_last[i] < 0):
+            P_last[i] = (F_last[i]*v_last[i])
+            P_motor[i] = P_last[i]*f
+            P_batt[i] = P_motor[i] - R*I_motor[i]
+        else:
+            P_batt[i] =(I_motor[i]*U_motor[i])
+            P_motor[i] =P_batt[i] - R*I_motor[i]
+            P_last[i] = P_motor[i]*f
         
         # Här beräknas spänningen för nästa tidssteg med vår regulator
         if i < N-1:
